@@ -71,6 +71,11 @@ const entryExists = (name) => {
   )
 }
 
+const fetchPeople = async (request, response) => {
+  const allPeople = await Person.find({});
+  response.json(allPeople);
+};
+
 //root request
 app.get('/', (request, response) => {
   response.send('This is the root page!');
@@ -79,9 +84,7 @@ app.get('/', (request, response) => {
 
 // fetch all entries
 app.get('/api/persons', (request, response) => {
-  (async () => {
-    response.json(await Person.find({}));
-  })();
+  fetchPeople(request, response);1
 });
 
 
