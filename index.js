@@ -2,6 +2,20 @@ const express = require('express');
 const app = express();
 const morgan = require('morgan');
 const cors = require('cors');
+const Person = require('./models/phonebook')
+// const mongoose = require('mongoose');
+// const url = `mongodb+srv://fdurham:${password}@cluster0.7uvkesk.mongodb.net/phonebookApp?retryWrites=true&w=majority`
+
+// mongoose.set('strictQuery', false);
+// mongoose.connect(url);
+
+// const personSchema = new mongoose.Schema({
+//   name: String,
+//   number: String,
+// });
+
+// const Person = mongoose.model('Person', personSchema);
+
 
 app.use(cors());
 app.use(express.static('build'));
@@ -17,38 +31,38 @@ morgan.token('body', req => {
 
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'));
 
-let persons = [
-  { 
-    "id": 1,
-    "name": "Arto Hellas", 
-    "number": "040-123456"
-  },
-  { 
-    "id": 2,
-    "name": "Ada Lovelace", 
-    "number": "39-44-5323523"
-  },
-  { 
-    "id": 3,
-    "name": "Dan Abramov", 
-    "number": "12-43-234345"
-  },
-  { 
-    "id": 4,
-    "name": "Mary Poppendieck", 
-    "number": "39-23-6423122"
-  }
-];
+// let persons = [
+//   { 
+//     "id": 1,
+//     "name": "Arto Hellas", 
+//     "number": "040-123456"
+//   },
+//   { 
+//     "id": 2,
+//     "name": "Ada Lovelace", 
+//     "number": "39-44-5323523"
+//   },
+//   { 
+//     "id": 3,
+//     "name": "Dan Abramov", 
+//     "number": "12-43-234345"
+//   },
+//   { 
+//     "id": 4,
+//     "name": "Mary Poppendieck", 
+//     "number": "39-23-6423122"
+//   }
+// ];
 
-const generateId = () => {
-  const randomNumber = () => Math.round(Math.random() * 10000);
-  let id = randomNumber();
+// const generateId = () => {
+//   const randomNumber = () => Math.round(Math.random() * 10000);
+//   let id = randomNumber();
 
-  while (persons.some(person => person.id === id)) {
-    id =  randomNumber();
-  }
-  return id;
-}
+//   while (persons.some(person => person.id === id)) {
+//     id =  randomNumber();
+//   }
+//   return id;
+// }
 
 const entryExists = (name) => {
   console.log(name);
@@ -65,7 +79,9 @@ app.get('/', (request, response) => {
 
 // fetch all entries
 app.get('/api/persons', (request, response) => {
-  response.send(persons);
+  (async () => {
+    response.json(await Person.find({}));
+  })();
 });
 
 
