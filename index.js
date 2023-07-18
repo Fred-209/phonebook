@@ -151,8 +151,6 @@ const unknownEndpoint = (request, response) => {
   response.status(404).send( {error: 'unknown endpoint'} );
 }
 
-app.use(unknownEndpoint);
-
 // error handling middleware
 const errorHandler = (error, request, response, next) => {
   console.error(error.message)
@@ -160,8 +158,6 @@ const errorHandler = (error, request, response, next) => {
   if (error.name === 'CastError') {
     return response.status(400).send({ error: 'malformatted id' })
   } else if (error.name === 'ValidationError') {
-    console.log("It's a validation error");
-    console.log(error.message, 'this is error');
     return response.status(400).send( { error: error.message });
   }
 
