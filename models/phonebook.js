@@ -15,13 +15,12 @@ const connect = async () => {
   }
 }
 
-
 const personSchema = new mongoose.Schema({
   name: String,
   number: String,
 });
 
-const Person = mongoose.model('Person', personSchema);
+// const Person = mongoose.model('Person', personSchema);
 
 personSchema.set('toJSON', {
   transform: (document, returnedObject) => {

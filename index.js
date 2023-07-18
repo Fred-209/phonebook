@@ -4,19 +4,6 @@ const app = express();
 const morgan = require('morgan');
 const cors = require('cors');
 const Person = require('./models/phonebook')
-// const mongoose = require('mongoose');
-// const url = `mongodb+srv://fdurham:${password}@cluster0.7uvkesk.mongodb.net/phonebookApp?retryWrites=true&w=majority`
-
-// mongoose.set('strictQuery', false);
-// mongoose.connect(url);
-
-// const personSchema = new mongoose.Schema({
-//   name: String,
-//   number: String,
-// });
-
-// const Person = mongoose.model('Person', personSchema);
-
 
 app.use(cors());
 app.use(express.static('build'));
@@ -32,104 +19,90 @@ morgan.token('body', req => {
 
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'));
 
-// let persons = [
-//   { 
-//     "id": 1,
-//     "name": "Arto Hellas", 
-//     "number": "040-123456"
-//   },
-//   { 
-//     "id": 2,
-//     "name": "Ada Lovelace", 
-//     "number": "39-44-5323523"
-//   },
-//   { 
-//     "id": 3,
-//     "name": "Dan Abramov", 
-//     "number": "12-43-234345"
-//   },
-//   { 
-//     "id": 4,
-//     "name": "Mary Poppendieck", 
-//     "number": "39-23-6423122"
-//   }
-// ];
-
-// const generateId = () => {
-//   const randomNumber = () => Math.round(Math.random() * 10000);
-//   let id = randomNumber();
-
-//   while (persons.some(person => person.id === id)) {
-//     id =  randomNumber();
-//   }
-//   return id;
-// }
-
-const entryExists = (name) => {
-  const allPersons = fetchPeople();
-  return persons.some(
+const entryExists = async (name) => {
+  const allPersons = await fetchPeople();
+  return allPersons.some(
     person => person.name.toLowerCase().trim() === name.toLowerCase().trim()
   )
 }
 
 const fetchPeople = async () => {
   return await Person.find({});
-  
 };
 
 //root request
-app.get('/', (request, response) => {
-  response.send('This is the root page!');
+app.get('/', (request, response, next) => {
+  try {
+    response.send('This is the root page!');
+  } catch (error) {
+    next(error);
+  }
 });
 
 
 // fetch all entries
-app.get('/api/persons', async (request, response) => {
-  const allPeople = await fetchPeople();
-  response.json(allPeople);
+app.get('/api/persons', async (request, response, next) => {
+  try {
+    const allPeople = await fetchPeople();
+    response.json(allPeople);
+  } catch (error) {
+    next(error);
+  }
 });
 
 
 // fetch general info
-app.get('/info', (request, response) => {
-  const count = persons.length;
-  const date = new Date();
-  response.send(
-    `
-      <p>Phonebook has info for ${count} people</p>
-      <p>${date}</p>
-    `
-  );
+app.get('/info', async (request, response, next) => {
+  try {
+    const allPeople = await fetchPeople();
+    const count = allPeople.length;
+    const date = new Date();
+    response.send(
+      `
+        <p>Phonebook has info for ${count} people</p>
+        <p>${date}</p>
+      `
+    );
+  } catch (error) {
+    next(error);
+  }
 });
 
 // fetch a single entry
-app.get('/api/persons/:id', (request, response) => {
-  const id = Number(request.params.id);
-  const person = persons.find(person => person.id === id);
-
-  if (person) {
-   response.json(person);
-  } else {
-    response.status(404).send('No person found with that id');
+app.get('/api/persons/:id', async (request, response, next) => {
+  
+  try {
+    const person = await Person.findById(request.params.id);
+  
+    if (person) {
+     response.json(person);
+    } else {
+      response.status(404).send('No person found with that id');
+    }
+  } catch (error) {
+    next(error);
   }
 });
 
 // delete an entry
-app.delete('/api/persons/:id', (request, response) => {
-  const id = Number(request.params.id);
-  const person = persons.find(person => person.id === id);
+app.delete('/api/persons/:id', async (request, response, next) => {
+  try {
+    const removedPerson = await Person.findByIdAndRemove(request.params.id);
+    
+    if (removedPerson) {
+      response.status(204).end();
+    } else {
+      response.status(404).send('No person found with that id');
+    }
 
-  if (person) {
-    persons = persons.filter(person => person.id !== id);
-    response.status(204).end();
-  } else {
-    response.status(404).send('No person found with that id');
+  } catch (error) {
+    next(error);
   }
 })
 
 
 // add entry
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', async (request, response) => {
   const name = request.body.name;
   const number = request.body.number;
 
@@ -139,21 +112,21 @@ app.post('/api/persons', (request, response) => {
     );
   }
 
-  if (entryExists(name)) {
+  if (await entryExists(name)) {
     return response.status(400).json( 
       { error: "Entry with this name already exists" }
     );
   }
 
 
-  const person = {
-    id: generateId(),
+  const person = new Person({
     name: name,
     number: number
-  }
-  
-  persons = [...persons, person];
-  response.json(person);
+  });
+  console.log('before attempting to save person');
+  const savedPerson = await person.save();
+  console.log('person saved');
+  response.json(savedPerson);
 });
 
 
@@ -163,6 +136,20 @@ const unknownEndpoint = (request, response) => {
 }
 
 app.use(unknownEndpoint);
+
+// error handling middleware
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  } 
+
+  next(error)
+}
+
+app.use(errorHandler)
+
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
