@@ -102,7 +102,7 @@ app.delete('/api/persons/:id', async (request, response, next) => {
 
 
 // add entry
-app.post('/api/persons', async (request, response) => {
+app.post('/api/persons', async (request, response, next) => {
   const name = request.body.name;
   const number = request.body.number;
 
@@ -118,15 +118,19 @@ app.post('/api/persons', async (request, response) => {
     );
   }
 
+  try {
+    const person = new Person({
+      name: name,
+      number: number
+    });
+    console.log('before attempting to save person');
+    const savedPerson = await person.save();
+    console.log('person saved');
+    response.json(savedPerson);
 
-  const person = new Person({
-    name: name,
-    number: number
-  });
-  console.log('before attempting to save person');
-  const savedPerson = await person.save();
-  console.log('person saved');
-  response.json(savedPerson);
+  } catch (error) {
+    next(error);
+  }
 });
 
 
@@ -152,16 +156,19 @@ app.use(unknownEndpoint);
 // error handling middleware
 const errorHandler = (error, request, response, next) => {
   console.error(error.message)
-
+  console.log('oh an error!');
   if (error.name === 'CastError') {
     return response.status(400).send({ error: 'malformatted id' })
   } else if (error.name === 'ValidationError') {
-    return response.status(400).send( {error: error.message });
+    console.log("It's a validation error");
+    console.log(error.message, 'this is error');
+    return response.status(400).send( { error: error.message });
   }
 
   next(error)
 }
 
+app.use(unknownEndpoint);
 app.use(errorHandler)
 
 
