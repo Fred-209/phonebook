@@ -138,7 +138,10 @@ app.post('/api/persons', async (request, response, next) => {
 app.put('/api/persons/:id', async (request, response, next) => {
   try {
     let updatedPerson = request.body;
-    updatedPerson = await Person.findByIdAndUpdate(updatedPerson.id,updatedPerson, { new: true }); 
+    updatedPerson = await Person.findByIdAndUpdate(
+      updatedPerson.id,
+      updatedPerson, 
+      { new: true, runValidators: true, context: 'query' }); 
     response.json(updatedPerson);
   } catch (error) {
     next(error);

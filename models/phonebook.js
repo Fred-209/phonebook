@@ -19,8 +19,14 @@ const personSchema = new mongoose.Schema({
   name: {
     type: String,
     minLength: 3,
+    required: true,
   },
-  number: String,
+  number: {
+    type: String,
+    minLength: 8,
+    required: true,
+    match: /^\d{2,3}-\d{5,}$/,
+  },
 });
 
 // const Person = mongoose.model('Person', personSchema);
