@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const app = express();
 const morgan = require('morgan');
@@ -65,15 +66,15 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms :b
 // }
 
 const entryExists = (name) => {
-  console.log(name);
+  const allPersons = fetchPeople();
   return persons.some(
     person => person.name.toLowerCase().trim() === name.toLowerCase().trim()
   )
 }
 
-const fetchPeople = async (request, response) => {
-  const allPeople = await Person.find({});
-  response.json(allPeople);
+const fetchPeople = async () => {
+  return await Person.find({});
+  
 };
 
 //root request
@@ -83,8 +84,9 @@ app.get('/', (request, response) => {
 
 
 // fetch all entries
-app.get('/api/persons', (request, response) => {
-  fetchPeople(request, response);1
+app.get('/api/persons', async (request, response) => {
+  const allPeople = await fetchPeople();
+  response.json(allPeople);
 });
 
 
@@ -130,7 +132,6 @@ app.delete('/api/persons/:id', (request, response) => {
 app.post('/api/persons', (request, response) => {
   const name = request.body.name;
   const number = request.body.number;
-  console.log(name, number);
 
   if (!name || !number) {
     return response.status(400).json(
