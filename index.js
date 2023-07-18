@@ -130,6 +130,18 @@ app.post('/api/persons', async (request, response) => {
 });
 
 
+// update a phonebook entry
+app.put('/api/persons/:id', async (request, response, next) => {
+  try {
+    let updatedPerson = request.body;
+    updatedPerson = await Person.findByIdAndUpdate(updatedPerson.id,updatedPerson, { new: true }); 
+    response.json(updatedPerson);
+  } catch (error) {
+    next(error);
+  }
+  
+});
+
 // non-existent routes
 const unknownEndpoint = (request, response) => {
   response.status(404).send( {error: 'unknown endpoint'} );
