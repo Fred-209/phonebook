@@ -3,7 +3,7 @@ const express = require('express');
 const app = express();
 const morgan = require('morgan');
 const cors = require('cors');
-const Person = require('./models/phonebook')
+const Person = require('./models/phonebook');
 
 app.use(cors());
 app.use(express.static('build'));
@@ -23,8 +23,8 @@ const entryExists = async (name) => {
   const allPersons = await fetchPeople();
   return allPersons.some(
     person => person.name.toLowerCase().trim() === name.toLowerCase().trim()
-  )
-}
+  );
+};
 
 const fetchPeople = async () => {
   return await Person.find({});
@@ -70,12 +70,12 @@ app.get('/info', async (request, response, next) => {
 
 // fetch a single entry
 app.get('/api/persons/:id', async (request, response, next) => {
-  
+
   try {
     const person = await Person.findById(request.params.id);
-  
+
     if (person) {
-     response.json(person);
+      response.json(person);
     } else {
       response.status(404).send('No person found with that id');
     }
@@ -88,7 +88,7 @@ app.get('/api/persons/:id', async (request, response, next) => {
 app.delete('/api/persons/:id', async (request, response, next) => {
   try {
     const removedPerson = await Person.findByIdAndRemove(request.params.id);
-    
+
     if (removedPerson) {
       response.status(204).end();
     } else {
@@ -98,7 +98,7 @@ app.delete('/api/persons/:id', async (request, response, next) => {
   } catch (error) {
     next(error);
   }
-})
+});
 
 
 // add entry
@@ -113,8 +113,8 @@ app.post('/api/persons', async (request, response, next) => {
   }
 
   if (await entryExists(name)) {
-    return response.status(400).json( 
-      { error: "Entry with this name already exists" }
+    return response.status(400).json(
+      { error: 'Entry with this name already exists' }
     );
   }
 
@@ -140,38 +140,38 @@ app.put('/api/persons/:id', async (request, response, next) => {
     let updatedPerson = request.body;
     updatedPerson = await Person.findByIdAndUpdate(
       updatedPerson.id,
-      updatedPerson, 
-      { new: true, runValidators: true, context: 'query' }); 
+      updatedPerson,
+      { new: true, runValidators: true, context: 'query' });
     response.json(updatedPerson);
   } catch (error) {
     next(error);
   }
-  
+
 });
 
 // non-existent routes
 const unknownEndpoint = (request, response) => {
-  response.status(404).send( {error: 'unknown endpoint'} );
-}
+  response.status(404).send( { error: 'unknown endpoint' } );
+};
 
 // error handling middleware
 const errorHandler = (error, request, response, next) => {
-  console.error(error.message)
+  console.error(error.message);
   console.log('oh an error!');
   if (error.name === 'CastError') {
-    return response.status(400).send({ error: 'malformatted id' })
+    return response.status(400).send({ error: 'malformatted id' });
   } else if (error.name === 'ValidationError') {
     return response.status(400).send( { error: error.message });
   }
 
-  next(error)
-}
+  next(error);
+};
 
 app.use(unknownEndpoint);
-app.use(errorHandler)
+app.use(errorHandler);
 
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
+  console.log(`Server running on port ${PORT}`);
 });
